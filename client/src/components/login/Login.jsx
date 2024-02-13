@@ -1,46 +1,65 @@
-import axios from 'axios'
-import React,{useState} from 'react'
-import { Link } from 'react-router-dom'
+import axios from 'axios';
+import React, { useState,useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 
 const Login = () => {
-  const [email, setemail] = useState('')
-  const [password, setpassword] = useState('')
-  const [username, setusername] = useState('')
-  const [error, seterror] = useState(null)
-  const [success, setsuccess] = useState(false)
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [redirect, setRedirect] = useState(false);
 
-  const handleLogin=async (e)=>{
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response=await axios.post("http://localhost:8000/api/v1/users/login",{
+      const response = await axios.post('http://localhost:8000/api/v1/users/login', {
         username,
         password,
         email,
       });
-      console.log('login successfull:',response.data)
-      setsuccess(true);
-      seterror(null);
+      if (response.status === 200 && response.data.success) {
+        const accessToken = response.data.data.accessToken;
+        Cookies.set('accessToken', accessToken, { expires: 7, sameSite: 'none', secure: true });
+
+        setSuccess(true);
+        setError(null);
+        setRedirect(true);
+      } else {
+        setError('Login failed. Please try again!');
+      }
     } catch (error) {
-      console.log('login failed:',error);
-      seterror('Login failed. Please try again!')
+      console.log('login failed:', error);
+      setError('Login failed. Please try again!');
     }
-  }
+  };
+
+  useEffect(() => {
+    if (redirect) {
+      navigate('/home', { state: { id: username, email: email } });
+    }
+  }, [redirect, navigate, username, email]);
+  
+
   return (
-    <div className='mt-4'>
-        <h1 className='text-center text-4xl uppercase'>Login</h1>
-        <form onSubmit={handleLogin} action="submit" className='flex flex-col max-w-md mx-auto'>
-            <input type="text" placeholder='username' value={username} onChange={(e)=>setusername(e.target.value)}/>
-            <input type="text" placeholder='your@gmail.com' value={email} onChange={(e)=>setemail(e.target.value)}/>
-            <input type="text" placeholder='password' value={password} onChange={(e)=>setpassword(e.target.value)}/>
-            {error && <div className='text-red-500'>{error}</div>}
-            {success && (<div className='text-green-600'>Login successfull</div>)}
-            <button className='primary'>Login</button>
+    <div className="mt-4">
+      <h1 className="text-center font-bold text-4xl uppercase">Login</h1>
+      <form onSubmit={handleLogin} action="submit" className="flex flex-col max-w-md mx-auto">
+        <input type="text" placeholder="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input type="text" placeholder="your@gmail.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input type="text" placeholder="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {error && <div className="text-red-500">{error}</div>}
+        {success && <div className="text-green-600">Login successful</div>}
+        <button className="primary">Login</button>
 
-            <div className='mt-2 text-center'>Don't have an account? <Link to="/register" className='text-blue-800 underline'>Register</Link></div>
-        </form>
-    
+        <div className="mt-2 text-center">
+          Don't have an account? <Link to="/register" className="text-blue-800 underline">Register</Link>
+        </div>
+      </form>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
