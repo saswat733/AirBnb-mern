@@ -10,6 +10,7 @@ import Register from './components/register/Register.jsx'
 import AccountPage from './components/account/AccountPage.jsx'
 import Bookings from './components/account/Bookings.jsx'
 import Places from './components/account/Places.jsx'
+import PlacesPage from './components/pages/PlacesPage.jsx'
 const router=createBrowserRouter([
   {
     path:'/',
@@ -31,6 +32,10 @@ const router=createBrowserRouter([
       {
         path:'/account/:subPage?',
         element:<AccountPage/>
+      },
+      {
+        path:'/account/:subPage/:action?',
+        element:<PlacesPage/>
       }
     ]
   }

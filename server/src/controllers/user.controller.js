@@ -170,7 +170,6 @@ const loginUser = asyncHandler(async (req, res) => {
         $or: [{ username }, { email }]
     })
 
-    console.log("username:", username);
 
     if (!user) {
         throw new ApiError(400, 'user not found');
@@ -206,32 +205,39 @@ const loginUser = asyncHandler(async (req, res) => {
 
 
 const logoutUser = asyncHandler(async (req, res) => {
-    User.findByIdAndUpdate(
-        req.user._id,
-        {
-            // This MongoDB operation is used to find and update the user document in the database. It sets the refreshToken field to undefined. The new: true option returns the modified document.
+    console.log('hello bhai');
+    try {
+        // Update user document to remove refreshToken field
+        await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $unset: {
+                    refreshToken: 1
+                }
+            },
+            { new: true }
+        );
 
-            // $set:{
-            //     refreshToken:undefined
-            // }
+        // Options for cookie clearing
+        const options = {
+            httpOnly: true,
+            secure: true
+        };
 
-            $unset: {
-                refreshToken: 1 //this removes the field from document
-            }
-        }, {
-        new: true
+        // Clear access token and refresh token cookies
+        res.clearCookie("accessToken", options);
+        res.clearCookie("refreshToken", options);
+
+        // Send JSON response indicating successful logout
+        res.status(200).json(new ApiResponse(200, {}, "User logged out"));
+    } catch (error) {
+        // Handle any errors that occur during the process
+        console.error("Error logging out:", error);
+        res.status(500).json(new ApiResponse(500, {}, "Error logging out"));
     }
-    )
+});
 
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
 
-    return res.status(200).clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged out"))
-})
 
 //refresh tokens are saved in database and acces token are with user and it expires in specific time so we send request end point inorder to refresh the access token
 

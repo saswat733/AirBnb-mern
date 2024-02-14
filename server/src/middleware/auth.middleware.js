@@ -10,6 +10,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
         // Remove "Bearer" prefix and trim any leading or trailing spaces
         token = token.replace("Bearer", "").trim();
+        console.log(token)
 
         // Throw error if no token is found
         if (!token) {
@@ -18,7 +19,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
         // Verify token authenticity
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        console.log('Decoded token:', decodedToken);
 
         // Find user corresponding to decoded user ID
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
@@ -30,7 +30,6 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
 
         // Attach user object to request
         req.user = user;
-        console.log(user)
 
         // Pass control to next middleware
         next();
