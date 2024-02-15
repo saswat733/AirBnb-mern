@@ -5,6 +5,7 @@ import uploadOnCloudinary from '../utils/cloudinary.js'
 import { ApiResponse } from "../utils/ApiResponse.js"
 import jwt from 'jsonwebtoken'
 import mongoose from "mongoose"
+import { Place } from "../models/place.models.js"
 // const registerUser= asyncHandler(async (req,res)=>{
 //     // step-1: get user detail from frontend
 //     // step-2: validation whether the provided details are correct
@@ -349,126 +350,45 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 })
 
 
-const getUserchannelProfile = asyncHandler(async (req, res) => {
-    const { username } = req.params
+const addLocationForm = asyncHandler(async (req, res) => {
+    const { title, address, description, perks, extraInfo, checkIn, checkOut, maxGuests } = req.body;
 
-    if (!username?.trim()) {
-        throw new ApiError(400, "username is missing")
-    }
-    // console.log(username)
-    const channel = await User.aggregate([
-        {
-            $match: {
-                username: username?.toLowerCase()
-            }
-        },
-        {
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "channel",
-                as: "subscribers"
-            }
-        },
-        {
-            $lookup: {
-                from: "subscriptions",
-                localField: "_id",
-                foreignField: "subscriber",
-                as: "subscribedTo"
-            }
-        },
-        {
-            $addFields: {
-                subscribersCount: {
-                    $size: "$subscribers"
-                },
-                channelsSubscribedToCount: {
-                    $size: "$subscribedTo"
-                },
-                isSubscribed: {
-                    $cond: {
-                        if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-                        then: true,
-                        else: false
-                    }
-                }
-
-            }
-        },
-        {
-            $project: {
-                fullname: 1,
-                username: 1,
-                subscribersCount: 1,
-                channelsSubscribedToCount: 1,
-                isSubscribed: 1,
-                avatar: 1,
-                coverImage: 1,
-                email: 1,
-
-            }
-        }
-    ])
-    console.log(channel)
-    if (!channel?.length) {
-        throw new ApiError(404, "channel does not exists")
+    // Check if any required fields are empty
+    if ([title, address, description, perks, extraInfo, checkIn, checkOut, maxGuests].some(field => !field || field.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
     }
 
+    // Check if file is missing
+    if (!req.file) {
+        throw new ApiError(400, "Photos for location missing.");
+    }
 
-    return res.status(200).
-        json(new ApiResponse(200, channel[0], "user channel fetched successfully"))
-})
+    const PhotosLocalPath = req.file.path;
+
+    const locationPhoto=await uploadOnCloudinary(PhotosLocalPath)
+
+    const newLocation = await Place.create({
+        title,
+        address,
+        description,
+        perks,
+        photos:locationPhoto.url, // Use the path directly
+        extraInfo,
+        checkIn,
+        checkOut,
+        maxGuests
+    });
+
+    const createdLocation = await Place.findById(newLocation._id);
+
+    if (!createdLocation) {
+        throw new ApiError(400, 'Something went wrong while creating new location');
+    }
+
+    return res.status(200).json(new ApiResponse(200, createdLocation, "Location created successfully."));
+});
 
 
-const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
-            }
-        },
-        {
-            $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        fullname: 1,
-                                        username: 1,
-                                        avatar: 1
-                                    }
-
-                                }
-                            ]
-                        }
-                    },
-                    {
-                        $addFields: {
-                            owner: {
-                                $first: "$owner"
-                            }
-                        }
-                    }
-                ]
-            }
-        }
-    ])
-
-    return res.status(200).json(
-        new ApiResponse(200, user[0].watchHistory, "wathc history fetched sucessesfully")
-    )
-})
 export {
     registerUser,
     loginUser,
@@ -477,8 +397,8 @@ export {
     getCurrentUser,
     refreshAccessToken,
     updateAccountDetails,
-    getUserchannelProfile,
-    getWatchHistory
+    addLocationForm
+    
 }
 
 
