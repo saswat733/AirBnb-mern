@@ -323,6 +323,26 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     // return res.status(201).json(new ApiResponse(200, createdUser, "User created successfully"));
 })
 
+const getAllLocationPhotos = asyncHandler(async (req, res) => {
+    const places=await Place.find();
+
+    res.status(200).json({success:true,data:places})
+
+});
+
+const getAddedLocations = asyncHandler(async (req, res) => {
+    // Fetch all added locations from the database
+    const locations = await Place.find();
+
+    // Check if locations were found
+    if (!locations || locations.length === 0) {
+        throw new ApiError(404, "No locations found");
+    }
+
+    // Send the locations as the response data
+    return res.status(200).json(new ApiResponse(200, locations, "All locations fetched successfully"));
+});
+
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { fullname, email } = req.body
@@ -351,34 +371,32 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 
 const addLocationForm = asyncHandler(async (req, res) => {
-    const { title, address, description, perks, extraInfo, checkIn, checkOut, maxGuests } = req.body;
+    const { title, address, description, extraInfo, checkIn, checkOut, maxGuests, perks, photos } = req.body;
 
     // Check if any required fields are empty
-    if ([title, address, description, perks, extraInfo, checkIn, checkOut, maxGuests].some(field => !field || field.trim() === "")) {
+    if ([title, address, description, checkIn, checkOut, maxGuests].some(field => !field || field.trim() === "")) {
         throw new ApiError(400, "All fields are required");
     }
 
-    // Check if file is missing
-    if (!req.file) {
+    // Check if photos array is missing or empty
+    if (!photos || photos.length === 0) {
         throw new ApiError(400, "Photos for location missing.");
     }
 
-    const PhotosLocalPath = req.file.path;
-
-    const locationPhoto=await uploadOnCloudinary(PhotosLocalPath)
-
+    // Create new location
     const newLocation = await Place.create({
         title,
         address,
         description,
-        perks,
-        photos:locationPhoto.url, // Use the path directly
+        photos,
         extraInfo,
         checkIn,
         checkOut,
-        maxGuests
+        maxGuests,
+        perks // Assuming perks is already an array
     });
 
+    // Find the newly created location
     const createdLocation = await Place.findById(newLocation._id);
 
     if (!createdLocation) {
@@ -389,6 +407,7 @@ const addLocationForm = asyncHandler(async (req, res) => {
 });
 
 
+
 export {
     registerUser,
     loginUser,
@@ -397,7 +416,9 @@ export {
     getCurrentUser,
     refreshAccessToken,
     updateAccountDetails,
-    addLocationForm
+    addLocationForm,
+    getAddedLocations,
+    getAllLocationPhotos
     
 }
 

@@ -5,7 +5,8 @@ const Home = () => {
   
   return (
     <div>
-     <AccountPage/>
+    <AccountPage/>
+    
     </div>
   )
 }

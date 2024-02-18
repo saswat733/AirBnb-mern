@@ -1,72 +1,165 @@
+import Cookies from "js-cookie";
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
+import axios from "axios";
 
 const PlacesPage = () => {
   const { action } = useParams();
-  const [title, setTitle] = useState("");
-  const [address, setAddress] = useState("");
-  const [photos, setPhotos] = useState([]);
-  const [description, setDescription] = useState("");
-  const [perks, setPerks] = useState({
-    wifi: false,
-    freeParking: false,
-    metroPosition: false,
-    laundryServices: false,
-    tv: false,
-    pets: false,
+  const [clicked, setclicked] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    address: "",
+    photos: [],
+    description: "",
+    perks: {
+      wifi: "",
+      freeParking: "",
+      metroPosition: "",
+      laundryServices: "",
+      tv: "",
+      pets: "",
+    },
+    extraInfo: "",
+    checkIn: "",
+    checkOut: "",
+    maxGuests: "",
+    price:"",
   });
-  const [extraInfo, setExtraInfo] = useState("");
-  const [checkin, setcheckin] = useState('')
-  const [checkout, setcheckout] = useState('')
-  const [maxtime, setmaxtime] = useState('')
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Logic to handle form submission
+  const [redirect, setredirect] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleChangePerk = (e) => {
+    const { name, checked } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      perks: {
+        ...prevState.perks,
+        [name]: checked,
+      },
+    }));
+  };
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prevState) => ({
+        ...prevState,
+        perks: {
+          ...prevState.perks,
+          [name]: checked,
+        },
+      }));
+    } else {
+      setFormData((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }));
+    }
   };
 
+  const removeImage = (index) => {
+    setFormData((prevState) => {
+      const updatedPhotos = [...prevState.photos];
+      updatedPhotos.splice(index, 1);
+      const clickedImage=updatedPhotos.splice(index,1)[0];
+      updatedPhotos.unshift(clickedImage);
+
+      return {
+        ...prevState,
+        photos: updatedPhotos,
+      };
+    });
+  };
+  const setMain=(index)=>{
+    setFormData((prevState)=>{
+
+      const updatedPhotos=[...prevState.photos];
+      const newMain=updatedPhotos.splice(index,1)[0];
+      updatedPhotos.unshift(newMain);
+
+      return {
+        ...prevState,
+        photos:updatedPhotos
+      }
+    })
+
+  }
+
+  const handlePhotoChange = (e) => {
+    const { value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      photos: [...prevState.photos, value],
+    }));
+    // Clear the input field after adding the link
+    e.target.value = "";
+  };
+  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const accessToken = Cookies.get("accessToken");
+    try {
+      if (accessToken) {
+        const formDataToSend = new FormData();
+        for (const key in formData) {
+          if (key === "photos") {
+            for (let i = 0; i < formData[key].length; i++) {
+              formDataToSend.append("photos", formData[key][i]);
+            }
+          } else if (typeof formData[key] === "object") {
+            for (const subKey in formData[key]) {
+              formDataToSend.append(`${key}.${subKey}`, formData[key][subKey]);
+            }
+          } else {
+            formDataToSend.append(key, formData[key]);
+          }
+        }
+
+        const response = await axios.post(
+          "http://localhost:8000/api/v1/users/places/add-new-locations",
+          formDataToSend,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("Location added successfully:", response.data);
+        setredirect(true);
+        setIsSubmitting(false);
+      } else {
+        console.log("Access token not found.");
+      }
+    } catch (error) {
+      console.error("Error adding location:", error);
+    }
+  };
+
+  if (redirect) {
+    return <Navigate to={"/account/places"} />;
+  }
   return (
     <>
-      {action !== "new" && (
-        <div className="text-center">
-          <Link
-            className="inline-flex bg-pink-600 rounded-full items-center justify-center uppercase p-2 gap-2 hover:bg-white border border-solid "
-            to={"/account/places/new"}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
-            add new places
-          </Link>
-        </div>
-      )}
+      {action !== "new" && <></>}
       {action === "new" && (
         <div className="mt-4">
           <h1 className="text-center font-bold text-4xl uppercase">
             Add a new destination
           </h1>
-          <form onSubmit={handleSubmit} className="mt-4 flex flex-col max-w-md mx-auto">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-4 flex flex-col max-w-md mx-auto"
+          >
             <h2 className="text-xl mt-4">Title:</h2>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-sm ">
               Title for your place, should be short and classy.
             </p>
             <input
               type="text"
               placeholder="Title"
               name="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={formData.title}
+              onChange={handleChange}
+              className="border-2 border-gray-500 rounded-lg"
             />
 
             <h2 className="text-xl mt-4">Address:</h2>
@@ -75,186 +168,152 @@ const PlacesPage = () => {
               type="text"
               placeholder="Address"
               name="address"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              value={formData.address}
+              onChange={handleChange}
+              className="border-2 border-gray-500 rounded-lg"
             />
 
             <h2 className="text-xl mt-4">Photos:</h2>
-            <p className="text-gray-500 text-sm">Add some 4-5 photos.</p>
+            <p className="text-gray-500 text-sm">Add some photos.</p>
             <input
-              type="file"
-              placeholder="Photos"
+              type="url"
+              placeholder="Enter Link's for Photos"
               name="photos"
-              onChange={(e) => setPhotos(e.target.files)}
+              onChange={handlePhotoChange}
+              className="border-2 border-gray-500 rounded-lg"
             />
+            <div className="grid grid-cols-3 md:grid-cols-2 ">
+              {formData.photos.map((photoUrl, index) => (
+                <div className="relative">
+                  <img
+                    className="w-32 h-24 mt-4 rounded-lg "
+                    key={index}
+                    src={photoUrl} // Use the URL provided by the user
+                    alt={`Uploaded photo ${index}`}
+                  />
+                  <div
+                    className="absolute  z-10 bottom-0 text-white m-1 bg-black p-1 rounded-md bg-opacity-45"
+                    onClick={() => removeImage(index)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                      class="w-6 h-6"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                      />
+                    </svg>
+                  </div>
+
+                  <div
+                    className="absolute z-10 bottom-0 right-6 md:right-24 text-white m-1 bg-black p-1 rounded-md bg-opacity-45"
+                    onClick={() => setclicked(!clicked)}
+                  >
+                    {clicked ? (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="w-6 h-6"
+                          onClick={()=>setMain(index)}
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.006 5.404.434c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.434a.563.563 0 0 0 .475-.345L11.48 3.5Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-6 h-6"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
+                          />
+                        </svg>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
 
             <h2 className="text-xl mt-4">Description:</h2>
             <p className="text-gray-500 text-sm">Description for your place.</p>
-            <input
+            <textarea
               type="text"
+              rows={"6"}
               placeholder="Description"
               name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              value={formData.description}
+              onChange={handleChange}
+              className=" mt-4 border-2 border-gray-500 rounded-lg"
+            ></textarea>
 
             {/* Perks checkboxes */}
             <h2 className="text-xl mt-4">Perks:</h2>
-            <div className="grid gap-2 grid-cols-1 md:grid-cols-1 lg:grid-cols-2">
-                  <div className="grid gap-2 grid-cols-2 md:grid-cols-2 lg:grid-cols-6">
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8.288 15.038a5.25 5.25 0 0 1 7.424 0M5.106 11.856c3.807-3.808 9.98-3.808 13.788 0M1.924 8.674c5.565-5.565 14.587-5.565 20.152 0M12.53 18.22l-.53.53-.53-.53a.75.75 0 0 1 1.06 0Z"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold"> wifi</span>
-              </label>
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold ">
-                  {" "}
-                  free parking
-                </span>
-              </label>
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                  />
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold">
-                  {" "}
-                  metro position
-                </span>
-              </label>
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold">
-                  {" "}
-                  laundary services
-                </span>
-              </label>
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path d="M19.5 6h-15v9h15V6Z" />
-                  <path
-                    fill-rule="evenodd"
-                    d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v11.25C1.5 17.16 2.34 18 3.375 18H9.75v1.5H6A.75.75 0 0 0 6 21h12a.75.75 0 0 0 0-1.5h-3.75V18h6.375c1.035 0 1.875-.84 1.875-1.875V4.875C22.5 3.839 21.66 3 20.625 3H3.375Zm0 13.5h17.25a.375.375 0 0 0 .375-.375V4.875a.375.375 0 0 0-.375-.375H3.375A.375.375 0 0 0 3 4.875v11.25c0 .207.168.375.375.375Z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold"> TV</span>
-              </label>
-              <label htmlFor="" className="flex gap-3 items-center border border-solid p-2 m-1">
-                <input type="checkbox" />
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke-width="1.5"
-                  stroke="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904m10.598-9.75H14.25M5.904 18.5c.083.205.173.405.27.602.197.4-.078.898-.523.898h-.908c-.889 0-1.713-.518-1.972-1.368a12 12 0 0 1-.521-3.507c0-1.553.295-3.036.831-4.398C3.387 9.953 4.167 9.5 5 9.5h1.053c.472 0 .745.556.5.96a8.958 8.958 0 0 0-1.302 4.665c0 1.194.232 2.333.654 3.375Z"
-                  />
-                </svg>
-
-                <span className="text-gray-700 font-semibold"> pets</span>
-              </label>
-            </div>
-
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-2 lg:grid-cols-2">
+              <div className="grid grid-cols-2  gap-4  ">
+                {Object.entries(formData.perks).map(([key, isChecked]) => (
+                  <label
+                    htmlFor={key}
+                    className="flex gap-3 items-center border border-solid p-2 m-1 w-auto text-wrap"
+                    key={key}
+                  >
+                    <input
+                      type="checkbox"
+                      id={key}
+                      checked={isChecked}
+                      onChange={handleChangePerk}
+                      name={key} // Use the perk name as the name attribute
+                    />
+                    <span className="text-gray-700 font-semibold">{key}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <h2 className="text-xl mt-4">Extra info:</h2>
-            <p className="text-gray-500 text-sm">Extra information for your place.</p>
+            <p className="text-gray-500 text-sm">
+              Extra information for your place.
+            </p>
             <input
               type="text"
               placeholder="Extra info"
               name="extraInfo"
-              value={extraInfo}
-              onChange={(e) => setExtraInfo(e.target.value)}
+              value={formData.extraInfo}
+              onChange={handleChange}
+              className="border-2 border-gray-500 rounded-lg"
             />
 
             {/* Check-in time */}
             <h2 className="text-xl mt-4">Check-in time:</h2>
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div>
                 <h3>Check-in</h3>
                 <input
                   type="text"
                   placeholder="Check-in time"
-                  value={checkin}
-                  onChange={(e) =>
-                    setcheckin(e.target.value)
-                  }
+                  name="checkIn"
+                  value={formData.checkIn}
+                  onChange={handleChange}
+                  className="border-2 border-gray-500 rounded-lg"
                 />
               </div>
               <div>
@@ -262,25 +321,41 @@ const PlacesPage = () => {
                 <input
                   type="text"
                   placeholder="Check-out time"
-                  value={checkout}
-                  onChange={(e) =>
-                    setcheckout(e.target.value )
-                  }
+                  name="checkOut"
+                  value={formData.checkOut}
+                  onChange={handleChange}
+                  className="border-2 border-gray-500 rounded-lg"
                 />
               </div>
               <div>
-                <h3>Max in time</h3>
+                <h3>Maximum Guests</h3>
                 <input
                   type="text"
                   placeholder="Max in time"
-                  value={maxtime}
-                  onChange={(e) =>
-                    setmaxtime(e.target.value)
-                  }
+                  name="maxGuests"
+                  value={formData.maxGuests}
+                  onChange={handleChange}
+                  className="border-2 border-gray-500 rounded-lg"
                 />
               </div>
+              <div>
+                <h3>Price</h3>
+                <input
+                  type="text"
+                  placeholder="Price To Stay"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="border-2 border-gray-500 rounded-lg"
+                />
+              </div>
+              
             </div>
 
+
+            {isSubmitting && (
+              <p className="text-center text-green-600">Submitting...</p>
+            )}
             <button className="primary my-3" type="submit">
               Add
             </button>

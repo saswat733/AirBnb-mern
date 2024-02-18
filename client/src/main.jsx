@@ -11,6 +11,7 @@ import AccountPage from './components/account/AccountPage.jsx'
 import Bookings from './components/account/Bookings.jsx'
 import Places from './components/account/Places.jsx'
 import PlacesPage from './components/pages/PlacesPage.jsx'
+import HomeIndex from './components/home/HomeIndex.jsx'
 const router=createBrowserRouter([
   {
     path:'/',
@@ -34,8 +35,16 @@ const router=createBrowserRouter([
         element:<AccountPage/>
       },
       {
+        path:'/account/:subPage?',
+        element:<Places/>
+      },
+      {
         path:'/account/:subPage/:action?',
         element:<PlacesPage/>
+      },
+      {
+        path:'/',
+        element:<HomeIndex/>
       }
     ]
   }
