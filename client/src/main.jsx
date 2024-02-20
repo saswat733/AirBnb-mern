@@ -12,6 +12,7 @@ import Bookings from './components/account/Bookings.jsx'
 import Places from './components/account/Places.jsx'
 import PlacesPage from './components/pages/PlacesPage.jsx'
 import HomeIndex from './components/home/HomeIndex.jsx'
+import SinglePlacePage from './components/places/SinglePlacePage.jsx'
 const router=createBrowserRouter([
   {
     path:'/',
@@ -45,7 +46,12 @@ const router=createBrowserRouter([
       {
         path:'/',
         element:<HomeIndex/>
-      }
+      },
+      {
+        path:'/place/:subPlace?',
+        element:<SinglePlacePage/>
+      },
+     
     ]
   }
 ])

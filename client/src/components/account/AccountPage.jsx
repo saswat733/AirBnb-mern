@@ -4,6 +4,7 @@ import { Link, NavLink, useLocation,Navigate, useNavigate } from "react-router-d
 import Cookies from "js-cookie";
 import PlacesPage from "../pages/PlacesPage";
 import Places from "./Places";
+import Bookings from "./Bookings";
 
 const AccountPage = () => {
   const [userData, setUserData] = useState({});
@@ -136,6 +137,11 @@ const AccountPage = () => {
     {
       subPage==='places' && (
         <Places/>
+      )
+    }
+    {
+      subPage==='bookings' && (
+        <Bookings/>
       )
     }
     </div>

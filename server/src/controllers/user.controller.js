@@ -371,7 +371,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 
 const addLocationForm = asyncHandler(async (req, res) => {
-    const { title, address, description, extraInfo, checkIn, checkOut, maxGuests, perks, photos } = req.body;
+    const { title, address, description, extraInfo, checkIn, checkOut, maxGuests, perks, photos,price } = req.body;
 
     // Check if any required fields are empty
     if ([title, address, description, checkIn, checkOut, maxGuests].some(field => !field || field.trim() === "")) {
@@ -393,7 +393,8 @@ const addLocationForm = asyncHandler(async (req, res) => {
         checkIn,
         checkOut,
         maxGuests,
-        perks // Assuming perks is already an array
+        perks, // Assuming perks is already an array
+        price
     });
 
     // Find the newly created location
@@ -406,6 +407,25 @@ const addLocationForm = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, createdLocation, "Location created successfully."));
 });
 
+const singleLocation = asyncHandler(async (req, res) => {
+    try {
+        const { id } = req.params; // Ensure to use the correct parameter name
+        console.log('ID:', id); // Log the received ID
+        
+        const singlePlace = await Place.findById(id);
+        
+        if (!singlePlace) {
+            console.log('Place not found');
+            return res.status(404).json({ error: 'Place not found' });
+        }
+        
+        console.log('Found place:', singlePlace); // Log the found place
+        return res.json(singlePlace);
+    } catch (error) {
+        console.error('Error in singleLocation controller:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 export {
@@ -418,7 +438,8 @@ export {
     updateAccountDetails,
     addLocationForm,
     getAddedLocations,
-    getAllLocationPhotos
+    getAllLocationPhotos,
+    singleLocation
     
 }
 

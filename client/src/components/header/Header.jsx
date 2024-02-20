@@ -1,15 +1,46 @@
 import React, { useEffect,useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 // Create a context to hold the user information
 
 // Custom hook to use the user context
 
+
 const Header = (props) => {
- 
+  const navigate=useNavigate()
+  const [UserData, setUserData] = useState('')
+  useEffect(() => {
+    const accessToken = Cookies.get('accessToken');
+    if(!accessToken){
+      navigate('/login')
+    }
+    // console.log(accessToken)
+    const fetchUserData = async () => {
+      try {
+        if (accessToken) {
+          const response = await axios.get('http://localhost:8000/api/v1/users/current-user', {
+            headers: {
+              Authorization: `Bearer ${accessToken}`
+            }
+          });
+          console.log(response.data.data);
+          setUserData(response.data.data);
+          // console.log(userData);
+        } else {
+          console.log('No access token available');
+        }
+      } catch (error) {
+        console.log('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
+  }, []); // Empty dependency array ensures useEffect runs only once on component mount
+
    
   return (
+
     <header className="flex items-center gap-5 justify-between">
       <Link to="/" className="flex items-center gap-1 justify-center">
         <svg
@@ -27,7 +58,7 @@ const Header = (props) => {
           airbnb
         </h5>
       </Link>
-      <div className="flex items-center  gap-5 shadow-md shadow-gray-300  justify-center border border-solid p-2 rounded-full">
+      <div className="hidden md:flex items-center gap-5 shadow-md shadow-gray-300 justify-center border border-solid p-2 rounded-full">
         <div className="font-semibold">Anywhere</div>
         <div className="border-l border-gray-300 h-6"></div>
         <div className="">Any week</div>
@@ -58,25 +89,38 @@ const Header = (props) => {
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeWidth={'1.5'} className="w-6 h-6" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z"></path></svg>
     
         </div>
-        <Link to="/login">
+        {
+          UserData?(<>
+      <Link to="/home">
+  <div className="group bg-gray-600 text-white rounded-full relative">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth="1.5"
+      stroke="currentColor"
+      className="w-6 h-6 group-hover:text-opacity-100 text-opacity-0 transition-opacity duration-300"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+      />
+    </svg>
+
+    <h6 className="absolute border-2 rounded-lg p-4 uppercase text-black top-10 right-[-1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300">{UserData.username}</h6>
+  </div>
+</Link>
+
+          </>):(<>
+            <Link to="/login">
           <div  className="bg-gray-600 text-white rounded-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-              />
-            </svg>
+           <button className="p-2 uppercase font-mono">Login</button>
           </div>
          
         </Link>
+          </>)
+        }
       </div>
     </header>
   );
