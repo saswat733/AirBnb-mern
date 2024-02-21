@@ -59,7 +59,7 @@ const Places = () => {
         </Link>
       </div>
 
-      <div className="mt-8 grid  justify-items-center  grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2">
+      <div className="mt-8 grid  justify-items-center  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
         {allLocations.map(location => (
           <div key={location._id} className="bg-white border-2 p-2 border-pink-500 border-solid  shadow-2xl rounded-lg overflow-hidden w-80">
             <img

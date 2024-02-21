@@ -304,7 +304,7 @@ const PlacesPage = () => {
 
             {/* Check-in time */}
             <h2 className="text-xl mt-4">Check-in time:</h2>
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 mb-6 md:grid-cols-2 gap-4">
               <div>
                 <h3>Check-in</h3>
                 <input

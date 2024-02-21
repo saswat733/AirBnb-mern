@@ -83,7 +83,7 @@ const SinglePlacePage = () => {
               {" "}
               Price: ${placeData.price}/per night
             </h1>
-            <div className="flex gap-44 mt-4 text-sm">
+            <div className="flex flex-col md:flex gap-4 md:gap-44 mt-4  text-sm">
               <div className="flex flex-col">
                 <label className="font-bold">Check in:</label>
                 <input
