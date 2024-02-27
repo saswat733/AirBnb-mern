@@ -1,38 +1,49 @@
-import Cookies from 'js-cookie'
-import React, { useState, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import axios from 'axios'
+import Cookies from 'js-cookie';
+import React, { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import axios from 'axios';
 
 const Places = () => {
-  const {}=useParams()
-  const [allLocations, setAllLocations] = useState([])
+  const {} = useParams();
+  const [allLocations, setAllLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const accessToken = Cookies.get('accessToken')
-
     const fetchAllAddedLocations = async () => {
       try {
-        if (accessToken) {
-          const response = await axios.get(
-            'http://localhost:8000/api/v1/users/places',
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`
-              }
-            }
-          )
-          console.log(response.data.data)
-          setAllLocations(response.data.data)
-        } else {
-          console.log('No token found.')
+        const accessToken = Cookies.get('accessToken');
+        if (!accessToken) {
+          throw new Error('Access token not found.');
         }
-      } catch (error) {
-        console.log('Error fetching all the locations.', error)
-      }
-    }
 
-    fetchAllAddedLocations()
-  }, [])
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/v1/users/places`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        setAllLocations(response.data.data);
+      } catch (error) {
+        setError(error.message || 'Error fetching all the locations.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllAddedLocations();
+  }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div>
@@ -49,18 +60,14 @@ const Places = () => {
             stroke="currentColor"
             className="w-6 h-6"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 4.5v15m7.5-7.5h-15"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           Add New Place
         </Link>
       </div>
 
       <div className="mt-8 grid  justify-items-center  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-        {allLocations.map(location => (
+        {allLocations.map((location) => (
           <div key={location._id} className="bg-white border-2 p-2 border-pink-500 border-solid  shadow-2xl rounded-lg overflow-hidden w-80">
             <img
               className="w-full h-56 object-cover object-center border-2 border-pink-600 rounded-md"
@@ -71,7 +78,7 @@ const Places = () => {
               <h2 className="text-gray-800 text-lg font-semibold capitalize">{location.title}</h2>
               <p className="mt-2 text-gray-600">{location.description}</p>
               <Link
-                to={`/places/:`}
+                to={`/places/${location._id}`}
                 className="mt-4 block text-center w-full bg-pink-600 hover:bg-pink-700 text-white py-2 px-4 rounded"
               >
                 View Details
@@ -81,7 +88,7 @@ const Places = () => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Places
+export default Places;

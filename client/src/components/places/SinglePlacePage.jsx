@@ -10,17 +10,15 @@ const SinglePlacePage = () => {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [numberGuests, setNumberGuests] = useState(1);
-  const [stayDuration, setStayDuration] = useState(0); // State to hold the stay duration
+  const [stayDuration, setStayDuration] = useState(0);
   const [Fullname, setFullname] = useState("");
   const [PhoneNumber, setPhoneNumber] = useState("");
+
   useEffect(() => {
     const fetchPlaceData = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:8000/api/v1/users/place/${subPlace}`
-        );
+        const response = await axios.get(`/api/v1/users/place/${subPlace}`); // Updated URL
         const place = response.data;
-
         setPlaceData(place);
       } catch (error) {
         console.log("Error fetching place data:", error);
@@ -32,7 +30,6 @@ const SinglePlacePage = () => {
     }
   }, [subPlace]);
 
-  // Calculate the stay duration whenever checkIn or checkOut changes
   useEffect(() => {
     if (checkIn && checkOut) {
       const duration = differenceInDays(new Date(checkOut), new Date(checkIn));
@@ -120,7 +117,7 @@ const SinglePlacePage = () => {
                     type="text"
                     placeholder="John martis"
                     value={Fullname}
-                    onChange={(e) => setFullname(e)}
+                    onChange={(e) => setFullname(e.target.value)}
                   />
                 </label>
                 <label>
@@ -129,7 +126,7 @@ const SinglePlacePage = () => {
                     type="text"
                     placeholder="9328XXXXXX"
                     value={PhoneNumber}
-                    onChange={(e) => setPhoneNumber(e)}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
                   />
                 </label>
               </>
@@ -137,7 +134,6 @@ const SinglePlacePage = () => {
 
             <button className="primary w-full mt-4">Book Now!</button>
           </div>
-          {/* Display stay duration */}
         </>
       ) : (
         <p>Loading...</p>
