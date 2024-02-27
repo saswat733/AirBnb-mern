@@ -19,7 +19,7 @@ const Header = (props) => {
     const fetchUserData = async () => {
       try {
         if (accessToken) {
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/v1/users/current-user`, {
+          const response = await axios.get(`http://localhost:8000/api/v1/users/current-user`, {
             headers: {
               Authorization: `Bearer ${accessToken}`
             }

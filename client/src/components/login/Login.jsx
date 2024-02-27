@@ -15,7 +15,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/v1/users/login', { // Updated URL
+      const response = await axios.post('http://localhost:8000/api/v1/users/login', { // Updated URL
         username,
         password,
         email,
