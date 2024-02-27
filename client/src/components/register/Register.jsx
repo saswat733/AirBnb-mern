@@ -11,9 +11,10 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
 
   const handleRegister = async (e) => {
+  
     e.preventDefault();
     try {
-      const response = await axios.post("/api/v1/users/register", { // Updated URL
+      const response = await axios.post(`${axios.defaults.baseURL}/api/v1/users/register`, { // Updated URL
         username,
         fullname,
         email,
