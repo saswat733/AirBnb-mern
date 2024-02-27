@@ -17,9 +17,11 @@ const SinglePlacePage = () => {
   useEffect(() => {
     const fetchPlaceData = async () => {
       try {
-        const response = await axios.get(`/api/v1/users/place/${subPlace}`); // Updated URL
-        const place = response.data;
+        const response = await axios.get(`http://localhost:8000/api/v1/users/place/${subPlace}`); // Updated URL
+        const place = response.data.data;
+        console.log(place.data)
         setPlaceData(place);
+
       } catch (error) {
         console.log("Error fetching place data:", error);
       }
@@ -46,7 +48,7 @@ const SinglePlacePage = () => {
           </h1>
           <p className="font-mono text-gray-700">{placeData.address}</p>
           <p className="text-sm font-extralight text-gray-500">
-            Listed on {format(new Date(placeData.createdAt), "MM/dd/yyyy")}
+          Listed on {placeData.createdAt ? format(new Date(placeData.createdAt), "MM/dd/yyyy") : 'Unknown'}
           </p>
 
           <div className="grid grid-cols-[2fr_1fr] gap-3 mt-4 border h-96 rounded-3xl md:flex justify-between overflow-hidden">
@@ -80,7 +82,7 @@ const SinglePlacePage = () => {
               {" "}
               Price: ${placeData.price}/per night
             </h1>
-            <div className="flex flex-col md:flex gap-4 md:gap-44 mt-4  text-sm">
+            <div className="flex flex-col md:flex gap-4 md:gap-44 md:flex-row mt-4  text-sm">
               <div className="flex flex-col">
                 <label className="font-bold">Check in:</label>
                 <input

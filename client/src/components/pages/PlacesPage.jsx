@@ -115,7 +115,7 @@ const PlacesPage = () => {
         }
 
         const response = await axios.post(
-          "/api/v1/users/places/add-new-locations", // Updated URL
+          "http://localhost:8000/api/v1/users/places/add-new-locations", // Updated URL
           formDataToSend,
           {
             headers: {

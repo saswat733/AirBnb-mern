@@ -15,13 +15,14 @@ const AccountPage = () => {
 
   useEffect(() => {
     const accessToken = Cookies.get('accessToken');
+    console.log(accessToken)
     if (!accessToken) {
       navigate('/login');
     }
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/v1/users/current-user`, {
+        const response = await axios.get('http://localhost:8000/api/v1/users/current-user', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -39,8 +40,9 @@ const AccountPage = () => {
   const handleLogOut = async () => {
     try {
       const accessToken = Cookies.get('accessToken');
+      console.log(accessToken)
       if (accessToken) {
-        await axios.post(`${process.env.REACT_APP_API_URL}/api/v1/users/logout`, {}, {
+        await axios.post(`http://localhost:8000/api/v1/users/logout`, {}, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

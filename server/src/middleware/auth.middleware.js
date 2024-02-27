@@ -8,6 +8,8 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         // Extract token from cookies or Authorization header
         let token = req.cookies?.accessToken || req.header("Authorization") || "";
 
+        console.log(token)
+
         // Remove "Bearer" prefix and trim any leading or trailing spaces
         token = token.replace("Bearer", "").trim();
         console.log(token)
@@ -27,7 +29,7 @@ export const verifyJWT = asyncHandler(async (req, _, next) => {
         if (!user) {
             throw new ApiError(401, "Invalid Access Token");
         }
-
+        
         // Attach user object to request
         req.user = user;
 

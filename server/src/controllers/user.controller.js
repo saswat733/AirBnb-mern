@@ -17,7 +17,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
-
+        console.log("access Token:",accessToken)
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
 
@@ -80,19 +80,26 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
-
+    console.log(accessToken)
     const loggedInUser = await User.findById(user._id).select('-password -refreshToken');
 
     const options = {
         httpOnly: true,
         secure: true,
-        // Add more cookie options as needed
     };
 
+    // Send the access token in the response along with the user information
     return res.status(200)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
-        .json(new ApiResponse(200, { user: loggedInUser }, "User logged in successfully"));
+        .json({
+            status: 'success',
+            data: {
+                user: loggedInUser,
+                accessToken: accessToken  // Include the access token here
+            },
+            message: "User logged in successfully"
+        });
 });
 
 const logoutUser = asyncHandler(async (req, res) => {

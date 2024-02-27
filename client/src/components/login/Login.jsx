@@ -15,23 +15,28 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/users/login', { // Updated URL
+      const response = await axios.post('http://localhost:8000/api/v1/users/login', {
         username,
         password,
         email,
       });
-      if (response.status === 200 && response.data.success) {
+      console.log(response)
+      // Check if login was successful
+      if (response.status === 200 || response.data.success) {
+        // Extract access token from the response data
         const accessToken = response.data.data.accessToken;
+        // Set access token in a cookie
         Cookies.set('accessToken', accessToken, { expires: 7, sameSite: 'none', secure: true });
-
+        // Update state to indicate successful login
         setSuccess(true);
         setError(null);
         setRedirect(true);
       } else {
+        // Handle login failure
         setError('Login failed. Please try again!');
       }
     } catch (error) {
-      console.log('login failed:', error);
+      console.log('Login failed:', error);
       setError('Login failed. Please try again!');
     }
   };
@@ -41,7 +46,6 @@ const Login = () => {
       navigate('/home', { state: { id: username, email: email } });
     }
   }, [redirect, navigate, username, email]);
-  
 
   return (
     <div className="mt-4">

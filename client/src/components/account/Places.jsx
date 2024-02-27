@@ -18,7 +18,7 @@ const Places = () => {
         }
 
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/v1/users/places`,
+          `http://localhost:8000/api/v1/users/places`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,
