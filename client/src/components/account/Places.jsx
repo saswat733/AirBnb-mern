@@ -18,7 +18,7 @@ const Places = () => {
         }
 
         const response = await axios.get(
-          `http://localhost:8000/api/v1/users/places`,
+          `https://vercel-server-pure.vercel.app/api/v1/users/places`,
           {
             headers: {
               Authorization: `Bearer ${accessToken}`,

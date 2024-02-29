@@ -22,7 +22,7 @@ const AccountPage = () => {
 
     const fetchUserData = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/v1/users/current-user', {
+        const response = await axios.get('https://vercel-server-pure.vercel.app/api/v1/users/current-user', {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
@@ -42,7 +42,7 @@ const AccountPage = () => {
       const accessToken = Cookies.get('accessToken');
       console.log(accessToken)
       if (accessToken) {
-        await axios.post(`http://localhost:8000/api/v1/users/logout`, {}, {
+        await axios.post(`https://vercel-server-pure.vercel.app/api/v1/users/logout`, {}, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },
